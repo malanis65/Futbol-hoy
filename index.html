@@ -5,59 +5,178 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Partidos de Fútbol Diarios</title>
     <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --primary: #1d4ed8;
+            --primary-light: #dbeafe;
+        }
+
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f3f4f6;
+            background-color: var(--bg-color);
+            color: var(--text-main);
             margin: 0;
             padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
 
         .app-container {
-            width: 100%;
             max-width: 650px;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
         }
 
         h1 {
-            text-align: center;
+            margin: 0 0 5px 0;
+            font-size: 2rem;
             color: #111827;
-            font-size: 1.8rem;
-            margin-bottom: 25px;
         }
 
-        /* Caja contenedora adaptada para móviles y ordenador */
-        .widget-holder {
-            width: 100%;
-            height: 650px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            overflow: hidden;
+        #current-date {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 1rem;
+            text-transform: capitalize;
         }
 
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
+        .status-message {
+            text-align: center;
+            padding: 30px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .match-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .league-badge {
+            font-size: 0.75rem;
+            background-color: var(--primary-light);
+            color: var(--primary);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        .teams-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .team {
+            font-size: 1.05rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .match-timing {
+            text-align: right;
+            min-width: 90px;
+        }
+
+        .match-time {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
         }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <h1>⚽ Partidos de Hoy</h1>
+        <header>
+            <h1>⚽ Partidos de Hoy</h1>
+            <p id="current-date">Cargando fecha...</p>
+        </header>
 
-        <div class="widget-holder">
-            <!-- Cartelera directa sin claves ni restricciones CORS -->
-            <iframe src="https://bstream.gg"></iframe>
-        </div>
+        <main id="app-content">
+            <div id="status-box" class="status-message">
+                Buscando partidos del día...
+            </div>
+            <div id="matches-list"></div>
+        </main>
     </div>
 
+    <script>
+        // Poner la fecha de hoy automáticamente
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('es-ES', { 
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+        });
+
+        async function loadMatches() {
+            const statusBox = document.getElementById('status-box');
+            const matchesList = document.getElementById('matches-list');
+
+            try {
+                // Conexión libre de errores CORS y compatible con servidores de GitHub Pages
+                const response = await fetch('https://allorigins.win' + encodeURIComponent('https://scorebat.com'));
+                
+                if (!response.ok) throw new Error();
+                
+                const wrapper = await response.json();
+                const data = JSON.parse(wrapper.contents);
+                
+                statusBox.style.display = 'none';
+
+                if (!data.response || data.response.length === 0) {
+                    statusBox.innerText = 'No hay partidos destacados registrados para hoy.';
+                    return;
+                }
+
+                // Generar tarjetas limpias impresas en tu propia web sin IFRAMES rotos
+                data.response.slice(0, 15).forEach(match => {
+                    const card = document.createElement('div');
+                    card.className = 'match-card';
+                    
+                    // Separar los dos equipos del título de la cartelera
+                    const teams = match.title.split(' - ');
+                    const equipoLocal = teams[0] || 'Equipo Local';
+                    const equipoVisitante = teams[1] || 'Equipo Visitante';
+
+                    card.innerHTML = `
+                        <div>
+                            <span class="league-badge">${match.competition}</span>
+                            <div class="teams-container">
+                                <div class="team">🏠 ${equipoLocal}</div>
+                                <div class="team">🚌 ${equipoVisitante}</div>
+                            </div>
+                        </div>
+                        <div class="match-timing">
+                            <div class="match-time">Hoy</div>
+                        </div>
+                    `;
+                    matchesList.appendChild(card);
+                });
+
+            } catch (err) {
+                statusBox.innerHTML = '⚠️ Error al sincronizar la cartelera. Por favor, refresca la página.';
+                console.error(err);
+            }
+        }
+
+        loadMatches();
+    </script>
 </body>
 </html>
-
