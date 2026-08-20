@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Panel de Fútbol Personalizado</title>
     <style>
-        /* Aquí controlas el diseño al 100%. Cámbialo como quieras */
+        /* Diseño 100% tuyo y modificable */
         body {
-            font-family: Arial, sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
             background-color: #1e1e24;
             color: #ffffff;
             padding: 20px;
@@ -27,14 +27,10 @@
             font-size: 0.8rem;
             color: #00ff88;
             font-weight: bold;
+            margin-bottom: 5px;
         }
         .equipos {
             font-size: 1.1rem;
-            margin: 5px 0;
-        }
-        .marcador {
-            font-weight: bold;
-            color: #ffcc00;
         }
     </style>
 </head>
@@ -52,38 +48,35 @@
             const loading = document.getElementById('loading');
 
             try {
-                // Consumimos una API deportiva de lectura libre directa (Sin bloqueos de red en GitHub)
-                const response = await fetch('https://thesportsdb.com');
-                const rawData = await response.json();
+                // API 100% abierta, sin claves y compatible con GitHub Pages
+                const response = await fetch('https://scorebat.com');
                 
+                if (!response.ok) {
+                    throw new Error("Error en la respuesta del servidor");
+                }
+                
+                const data = await response.json();
                 loading.style.display = 'none';
 
-                // AQUÍ TIENES LOS DATOS PUROS. Los gestionas como tú quieras:
-                const partidos = rawData.results;
+                // Aquí tienes el array con los datos puros
+                const partidos = data.response;
 
-                // Recorremos el JSON a nuestra manera con un bucle
-                partidos.forEach(partido => {
+                // Recorremos el JSON con un bucle a tu manera
+                partidos.slice(0, 20).forEach(partido => {
                     
-                    // Extraemos las variables individuales que nos interesen del objeto
-                    const nombreLiga = partido.strLeague;
-                    const equipoLocal = partido.strHomeTeam;
-                    const equipoVisitante = partido.strAwayTeam;
-                    const golesLocal = partido.intHomeScore !== null ? partido.intHomeScore : '-';
-                    const golesVisitante = partido.intAwayScore !== null ? partido.intAwayScore : '-';
+                    // Almacenamos los datos puros en variables para que los manipules
+                    const nombreLiga = partido.competition;
+                    const tituloPartido = partido.title; // Da el formato "Equipo A - Equipo B"
 
-                    // Maquetamos nuestra propia estructura HTML inyectando los datos
+                    // Maquetamos nuestra propia estructura HTML inyectando tus variables
                     const miTarjetaHTML = `
                         <div class="partido-tarjeta">
                             <div class="liga">${nombreLiga}</div>
-                            <div class="equipos">
-                                🏠 ${equipoLocal} <span class="marcador">${golesLocal}</span> 
-                                vs 
-                                ${equipoVisitante} <span class="marcador">${golesVisitante}</span> 🚌
-                            </div>
+                            <div class="equipos">🏃‍♂️ ${tituloPartido}</div>
                         </div>
                     `;
 
-                    // Lo añadimos a la pantalla
+                    // Inyectamos la tarjeta en el contenedor
                     contenedor.innerHTML += miTarjetaHTML;
                 });
 
@@ -93,7 +86,7 @@
             }
         }
 
-        // Ejecutar la lectura
+        // Ejecutar el lector automático
         gestionarMisDatos();
     </script>
 </body>
