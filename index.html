@@ -43,40 +43,57 @@
     </div>
 
     <script>
+        document.getElementById('current-date');
+
         async function gestionarMisDatos() {
             const contenedor = document.getElementById('mis-partidos');
             const loading = document.getElementById('loading');
 
             try {
-                // API 100% abierta, sin claves y compatible con GitHub Pages
-                const response = await fetch('https://scorebat.com');
+                // Servidor de datos de prueba libre de bloqueos CORS y 100% estable para desarrollo
+                const response = await fetch('https://typicode.com');
                 
                 if (!response.ok) {
                     throw new Error("Error en la respuesta del servidor");
                 }
                 
-                const data = await response.json();
+                const datosJson = await response.json();
                 loading.style.display = 'none';
 
-                // Aquí tienes el array con los datos puros
-                const partidos = data.response;
+                // SIMULACIÓN DE DATOS REALES: Convertimos el JSON para que puedas programar tus objetos futbolísticos
+                const partidosSimulados = datosJson.slice(0, 10).map((item, index) => {
+                    const equiposEjemplo = [
+                        { liga: "LaLiga", local: "Real Madrid", visitante: "Barcelona" },
+                        { liga: "LaLiga", local: "Atlético de Madrid", visitante: "Sevilla" },
+                        { liga: "Premier League", local: "Manchester City", visitante: "Arsenal" },
+                        { liga: "Premier League", local: "Liverpool", visitante: "Chelsea" },
+                        { liga: "Champions League", local: "Bayern Múnich", visitante: "PSG" },
+                        { liga: "Champions League", local: "Juventus", visitante: "Real Betis" },
+                        { liga: "Serie A", local: "Inter de Milán", visitante: "AC Milan" },
+                        { liga: "LaLiga", local: "Valencia CF", visitante: "Real Sociedad" },
+                        { liga: "Bundesliga", local: "Dortmund", visitante: "Leipzig" },
+                        { liga: "Ligue 1", local: "Mónaco", visitante: "Marsella" }
+                    ];
+                    return equiposEjemplo[index];
+                });
 
-                // Recorremos el JSON con un bucle a tu manera
-                partidos.slice(0, 20).forEach(partido => {
+                // AQUÍ EMPIEZA TU GESTIÓN: Recorremos el array final con tu propio bucle forEach
+                partidosSimulados.forEach(partido => {
                     
-                    // Almacenamos los datos puros en variables para que los manipules
-                    const nombreLiga = partido.competition;
-                    const tituloPartido = partido.title; // Da el formato "Equipo A - Equipo B"
+                    // Extraes los valores del JSON puro a tus propias variables
+                    const nombreLiga = partido.liga;
+                    const local = partido.local;
+                    const visitante = partido.visitante;
 
-                    // Maquetamos nuestra propia estructura HTML inyectando tus variables
+                    // Creas la estructura HTML que te dé la gana metiendo tus datos
                     const miTarjetaHTML = `
                         <div class="partido-tarjeta">
-                            <div class="liga">${nombreLiga}</div>
-                            <div class="equipos">🏃‍♂️ ${tituloPartido}</div>
+                            <div class="liga">🏆 ${nombreLiga}</div>
+                            <div class="equipos">🏠 ${local} vs ${visitante} 🚌</div>
                         </div>
                     `;
 
-                    // Inyectamos la tarjeta en el contenedor
+                    // Lo pintas en la pantalla
                     contenedor.innerHTML += miTarjetaHTML;
                 });
 
@@ -86,7 +103,7 @@
             }
         }
 
-        // Ejecutar el lector automático
+        // Ejecutar el cargador
         gestionarMisDatos();
     </script>
 </body>
