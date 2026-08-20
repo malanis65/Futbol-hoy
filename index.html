@@ -5,183 +5,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Partidos de Fútbol Diarios</title>
     <style>
-        :root {
-            --bg-color: #f3f4f6;
-            --card-bg: #ffffff;
-            --text-main: #1f2937;
-            --text-muted: #6b7280;
-            --primary: #059669;
-            --primary-light: #d1fae5;
-        }
-
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            background-color: #f3f4f6;
             margin: 0;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .app-container {
+            width: 100%;
             max-width: 650px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 30px;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
         h1 {
-            margin: 0 0 5px 0;
-            font-size: 2rem;
+            text-align: center;
             color: #111827;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
         }
 
         #current-date {
-            margin: 0;
-            color: var(--text-muted);
+            text-align: center;
+            margin: 0 0 25px 0;
+            color: #6b7280;
             font-size: 1rem;
             text-transform: capitalize;
         }
 
-        .status-message {
-            text-align: center;
-            padding: 30px;
-            background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            color: var(--text-muted);
-            font-size: 1.1rem;
-        }
-
-        .match-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .league-badge {
-            font-size: 0.75rem;
-            background-color: var(--primary-light);
-            color: var(--primary);
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-weight: 700;
-            display: inline-block;
-            margin-bottom: 8px;
-        }
-
-        .teams-container {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .team {
-            font-size: 1.05rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .match-timing {
-            text-align: right;
-            min-width: 90px;
-        }
-
-        .match-time {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--text-main);
+        /* Contenedor dinámico nativo para evitar bloqueos del navegador */
+        .football-widget-box {
+            width: 100%;
+            min-height: 500px;
         }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <header>
-            <h1>⚽ Partidos de Hoy</h1>
-            <p id="current-date">Cargando fecha...</p>
-        </header>
+        <h1>⚽ Partidos de Hoy</h1>
+        <p id="current-date"></p>
 
-        <main id="app-content">
-            <div id="status-box" class="status-message">
-                Buscando partidos de hoy...
+        <!-- Bloque de cartelera automatizado nativo para GitHub Pages -->
+        <div class="football-widget-box">
+            <div id="wg-api-football-games"
+                 data-host="v3.football.api-sports.io"
+                 data-key="64d981ad04d74766b497f548d7ac91d4"
+                 data-date=""
+                 data-league=""
+                 data-season=""
+                 data-theme="light"
+                 data-refresh="60"
+                 data-show-window="false"
+                 data-show-logos="true">
             </div>
-            <div id="matches-list"></div>
-        </main>
+            <script type="module" src="https://api-sports.io"></script>
+        </div>
     </div>
 
     <script>
-        const API_TOKEN = '64d981ad04d74766b497f548d7ac91d4'; 
-
-        document.getElementById('current-date').innerText = new Date().toLocaleDateString('es-ES', { 
+        // Poner la fecha automáticamente en el texto superior
+        const hoy = new Date();
+        document.getElementById('current-date').innerText = hoy.toLocaleDateString('es-ES', { 
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
         });
 
-        async function loadDailyMatches() {
-            const statusBox = document.getElementById('status-box');
-            const matchesList = document.getElementById('matches-list');
-
-            try {
-                // Truco técnico: Usamos un proxy alternativo ultra rápido y estable exclusivo para APIs con cabeceras
-                const response = await fetch('https://corsproxy.io?' + encodeURIComponent('https://football-data.org'), {
-                    headers: { 'X-Auth-Token': API_TOKEN }
-                });
-
-                if (!response.ok) throw new Error();
-
-                const data = await response.json();
-                statusBox.style.display = 'none';
-
-                if (!data.matches || data.matches.length === 0) {
-                    statusBox.style.display = 'block';
-                    statusBox.innerText = 'No hay partidos destacados programados para hoy en tus ligas.';
-                    return;
-                }
-
-                data.matches.forEach(match => {
-                    const localTime = new Date(match.utcDate).toLocaleTimeString('es-ES', {
-                        hour: '2-digit', minute: '2-digit'
-                    });
-
-                    const showScore = match.status !== 'TIMED' && match.status !== 'SCHEDULED';
-                    const homeScore = showScore ? match.score.fullTime.home : '0';
-                    const awayScore = showScore ? match.score.fullTime.away : '0';
-
-                    const card = document.createElement('div');
-                    card.className = 'match-card';
-                    card.innerHTML = `
-                        <div>
-                            <span class="league-badge">${match.competition.name}</span>
-                            <div class="teams-container">
-                                <div class="team">🏠 ${match.homeTeam.name} ${showScore ? `[${homeScore}]` : ''}</div>
-                                <div class="team">🚌 ${match.awayTeam.name} ${showScore ? `[${awayScore}]` : ''}</div>
-                            </div>
-                        </div>
-                        <div class="match-timing">
-                            <div class="match-time">${localTime}</div>
-                        </div>
-                    `;
-                    matchesList.appendChild(card);
-                });
-
-            } catch (err) {
-                statusBox.style.display = 'block';
-                statusBox.innerHTML = '⚠️ Error de sincronización rápida. Por favor, refresca la página en unos segundos.';
-                console.error(err);
-            }
-        }
-
-        loadDailyMatches();
+        // Configurar el widget dinámico con el año y fecha del día actual de forma automática
+        const yyyy = hoy.getFullYear();
+        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dd = String(hoy.getDate()).padStart(2, '0');
+        const fechaFormateada = `${yyyy}-${mm}-${dd}`;
+        
+        document.getElementById('wg-api-football-games').setAttribute('data-date', fechaFormateada);
     </script>
 </body>
 </html>
+
 
