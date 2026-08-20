@@ -10,8 +10,8 @@
             --card-bg: #ffffff;
             --text-main: #1f2937;
             --text-muted: #6b7280;
-            --primary: #1d4ed8;
-            --primary-light: #dbeafe;
+            --primary: #059669;
+            --primary-light: #d1fae5;
         }
 
         body {
@@ -120,7 +120,6 @@
     </div>
 
     <script>
-        // Poner la fecha de hoy automáticamente
         document.getElementById('current-date').innerText = new Date().toLocaleDateString('es-ES', { 
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
         });
@@ -130,37 +129,32 @@
             const matchesList = document.getElementById('matches-list');
 
             try {
-                // Conexión libre de errores CORS y compatible con servidores de GitHub Pages
-                const response = await fetch('https://allorigins.win' + encodeURIComponent('https://scorebat.com'));
-                
+                // Pasarela directa libre de restricciones de red o cuelgues CORS
+                const response = await fetch('https://codetabs.com');
                 if (!response.ok) throw new Error();
                 
-                const wrapper = await response.json();
-                const data = JSON.parse(wrapper.contents);
-                
+                const data = await response.json();
                 statusBox.style.display = 'none';
 
-                if (!data.response || data.response.length === 0) {
-                    statusBox.innerText = 'No hay partidos destacados registrados para hoy.';
+                if (!data || data.length === 0) {
+                    statusBox.innerText = 'No hay partidos destacados programados en este instante.';
                     return;
                 }
 
-                // Generar tarjetas limpias impresas en tu propia web sin IFRAMES rotos
-                data.response.slice(0, 15).forEach(match => {
+                data.slice(0, 15).forEach(match => {
                     const card = document.createElement('div');
                     card.className = 'match-card';
                     
-                    // Separar los dos equipos del título de la cartelera
                     const teams = match.title.split(' - ');
-                    const equipoLocal = teams[0] || 'Equipo Local';
-                    const equipoVisitante = teams[1] || 'Equipo Visitante';
+                    const local = teams[0] || 'Equipo Local';
+                    const visitante = teams[1] || 'Equipo Visitante';
 
                     card.innerHTML = `
                         <div>
                             <span class="league-badge">${match.competition}</span>
                             <div class="teams-container">
-                                <div class="team">🏠 ${equipoLocal}</div>
-                                <div class="team">🚌 ${equipoVisitante}</div>
+                                <div class="team">🏠 ${local}</div>
+                                <div class="team">🚌 ${visitante}</div>
                             </div>
                         </div>
                         <div class="match-timing">
@@ -171,7 +165,7 @@
                 });
 
             } catch (err) {
-                statusBox.innerHTML = '⚠️ Error al sincronizar la cartelera. Por favor, refresca la página.';
+                statusBox.innerHTML = '⚠️ Error en la red de sincronización. Refresca la ventana en unos segundos.';
                 console.error(err);
             }
         }
